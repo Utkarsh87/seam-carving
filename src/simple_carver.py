@@ -6,6 +6,7 @@ Most of the code has been replicated from https://github.com/dtfiedler/seam-carv
 
 import os
 import sys
+import argparse
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -100,17 +101,17 @@ def get_min_seam(img, energy_map):
     return seam
 
 def carve_seams(output_img):
-    num_seams = 150 # how many seams to remove from the image
+    num_seams = args.num_seams # how many seams to remove from the image
     energy_map = get_energy_map(output_img)
 
     for _ in trange(num_seams):
         seam = get_min_seam(output_img, energy_map)
 
-        overlay_seam(seam, "castle_with_seams.jpg") # to show all seams removed overlayed on the original image
+        overlay_seam(seam, args.image_name+"_with_seams.jpg") # to show all seams removed overlayed on the original image
 
-        cv2.imwrite(results_dir+"cur_castle_with_next_seam.jpg", output_img)
-        overlay_seam(seam, "cur_castle_with_next_seam.jpg") # overlay seam on current image(used for making gif)
-        img_for_gif = cv2.imread(results_dir+"cur_castle_with_next_seam.jpg")
+        cv2.imwrite(results_dir+"cur_with_next_seam.jpg", output_img)
+        overlay_seam(seam, "cur_with_next_seam.jpg") # overlay seam on current image(used for making gif)
+        img_for_gif = cv2.imread(results_dir+"cur_with_next_seam.jpg")
         image_list.append(img_for_gif)
 
         output_img = delete_seam(output_img, seam)
@@ -118,12 +119,19 @@ def carve_seams(output_img):
 
         energy_map = get_energy_map(output_img) # get energy map of new image
 
-    cv2.imwrite(results_dir+"castle_new.jpg", output_img)
+    cv2.imwrite(results_dir+args.image_name+"_new.jpg", output_img)
 
-img = cv2.imread(images_dir+"castle.jpg")
+parser = argparse.ArgumentParser()
+parser.add_argument('--image_name', help="filename of the image for resizing. Image must be present in the images directory. This name will be used to generate resultant filenames.", type=str)
+parser.add_argument('--num_seams', help="number of vertical seams to be removed from the image.", default=100, const=100, nargs='?', type=int)
+parser.add_argument('--filter_type', help="type of filter to be used for generating energy map.", default="sobel", choices=set(("sobel", "laplace")), nargs='?', const="sobel", type=str)
+args = parser.parse_args()
+
+img = cv2.imread(images_dir+args.image_name+".jpg")
 output_img = np.copy(img)
-cv2.imwrite(results_dir+"castle_new.jpg", output_img)
-cv2.imwrite(results_dir+"castle_with_seams.jpg", img)
+cv2.imwrite(results_dir+args.image_name+"_new.jpg", output_img)
+cv2.imwrite(results_dir+args.image_name+"_with_seams.jpg", img)
+print(f"Using the {args.filter_type} filter for generating the energy map")
 carve_seams(output_img)
 
 # create gif

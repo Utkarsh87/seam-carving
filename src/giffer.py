@@ -19,14 +19,12 @@ class GIFMake():
     def gif_make(self):
         frames = []
         imgs = glob.glob(self.results_dir+"*.png")
-        # print(imgs)
 
+        # sort the filenames(filename: "for_gif_i.png")
         list.sort(imgs, key=lambda x: int(x.split('_')[2].split('.png')[0]))
-        # print(imgs)
 
         for i in imgs:
             new_frame = Image.open(i)
-            # print(new_frame)
             frames.append(new_frame)
 
-        frames[0].save('out.gif', format='GIF', append_images=frames[1:], save_all=True, duration=40, loop=0)
+        frames[0].save('out_new.gif', format='GIF', append_images=frames[1:], save_all=True, duration=40, loop=0)
