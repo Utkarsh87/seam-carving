@@ -16,10 +16,6 @@ from tqdm import trange # progress bar
 
 from giffer import GIFMake
 
-results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results/")
-images_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images/")
-image_list = []
-
 def get_energy_map(img):
     # use the gradient magnitude function to generate the energy map
     img = img.astype(np.uint8)
@@ -109,10 +105,12 @@ def carve_seams(output_img):
 
         overlay_seam(seam, args.image_name+"_with_seams.jpg") # to show all seams removed overlayed on the original image
 
+        # the image file "cur_with_next_seam.jpg" is a temp file used as a frame in creating gif of the entire seam carving process
         cv2.imwrite(results_dir+"cur_with_next_seam.jpg", output_img)
-        overlay_seam(seam, "cur_with_next_seam.jpg") # overlay seam on current image(used for making gif)
+        overlay_seam(seam, "cur_with_next_seam.jpg") # overlay seam on current image
         img_for_gif = cv2.imread(results_dir+"cur_with_next_seam.jpg")
         image_list.append(img_for_gif)
+        os.remove(os.path.join(results_dir, "cur_with_next_seam.jpg"))
 
         output_img = delete_seam(output_img, seam)
         image_list.append(output_img)
@@ -127,6 +125,10 @@ parser.add_argument('--num_seams', help="number of vertical seams to be removed 
 parser.add_argument('--filter_type', help="type of filter to be used for generating energy map.", default="sobel", choices=set(("sobel", "laplace")), nargs='?', const="sobel", type=str)
 args = parser.parse_args()
 
+results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results/") # dir to store resultant images and energy maps etc
+images_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images/") # dir to read images from
+image_list = []
+
 img = cv2.imread(images_dir+args.image_name+".jpg")
 output_img = np.copy(img)
 cv2.imwrite(results_dir+args.image_name+"_new.jpg", output_img)
@@ -136,5 +138,5 @@ carve_seams(output_img)
 
 # create gif
 run = GIFMake(image_list)
-run.save_imgs()
+# run.save_imgs()
 run.gif_make()
