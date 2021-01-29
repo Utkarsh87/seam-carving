@@ -35,12 +35,14 @@ def get_energy_map(img):
     # merge into energy map
     energy_map = cv2.addWeighted(abs_sobel_x, 0.5, abs_sobel_y, 0.5, 0)
 
-    # write color map
+    # write color map(only for original image)
     color_map = cv2.applyColorMap(energy_map, cv2.COLORMAP_JET)
-    cv2.imwrite(results_dir+"colormap.jpg", color_map)
+    if not os.path.isfile(os.path.join(results_dir, "colormap.jpg")):
+        cv2.imwrite(results_dir+"colormap.jpg", color_map)
 
-    # write energy map
-    cv2.imwrite(results_dir+"energy.jpg", energy_map)
+    # write energy map(only for original image)
+    if not os.path.isfile(os.path.join(results_dir, "energy.jpg")):
+        cv2.imwrite(results_dir+"energy.jpg", energy_map)
 
     return energy_map
 
