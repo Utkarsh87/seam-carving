@@ -2,10 +2,13 @@
 Content-aware image resizing(Seam Carving)
 Author: Utkarsh Kumar Singh
 Most of the code has been replicated from https://github.com/dtfiedler/seam-carving-python
+
+To run this script:
+python src/carver.py --image_name castle --num_seams 100 --filter_type laplace
+Make sure to keep the image to be resized in the images dir, resized images along with other files will be saved in the results dir.
 """
 
 import os
-import sys
 import argparse
 import warnings
 warnings.filterwarnings("ignore")
@@ -42,12 +45,12 @@ def get_energy_map(img, filter_type):
 
     # write color map(only for original image)
     color_map = cv2.applyColorMap(energy_map, cv2.COLORMAP_JET)
-    if not os.path.isfile(os.path.join(results_dir, "colormap.jpg")):
-        cv2.imwrite(results_dir+"colormap.jpg", color_map)
+    if not os.path.isfile(os.path.join(results_dir, "colormap_"+args.filter_type+".jpg")):
+        cv2.imwrite(results_dir+"colormap_"+args.filter_type+".jpg", color_map)
 
     # write energy map(only for original image)
-    if not os.path.isfile(os.path.join(results_dir, "energy.jpg")):
-        cv2.imwrite(results_dir+"energy.jpg", energy_map)
+    if not os.path.isfile(os.path.join(results_dir, "energy_"+args.filter_type+".jpg")):
+        cv2.imwrite(results_dir+"energy_"+args.filter_type+".jpg", energy_map)
 
     return energy_map
 
@@ -110,7 +113,7 @@ def carve_seams(output_img):
     for _ in trange(num_seams):
         seam = get_min_seam(output_img, energy_map)
 
-        overlay_seam(seam, args.image_name+"_with_seams.jpg") # to show all seams removed overlayed on the original image
+        overlay_seam(seam, args.image_name+"_with_seams_"+args.filter_type+".jpg") # to show all seams removed overlayed on the original image
 
         # the image file "cur_with_next_seam.jpg" is a temp file used as a frame in creating gif of the entire seam carving process
         cv2.imwrite(results_dir+"cur_with_next_seam.jpg", output_img)
@@ -124,26 +127,24 @@ def carve_seams(output_img):
 
         energy_map = get_energy_map(output_img, args.filter_type) # get energy map of new image
 
-    cv2.imwrite(results_dir+args.image_name+"_new.jpg", output_img)
+    cv2.imwrite(results_dir+args.image_name+"_resized_"+args.filter_type+".jpg", output_img)
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--image_name', help="filename of the image for resizing. Image must be present in the images directory. This name will be used to generate resultant filenames.", type=str)
-parser.add_argument('--num_seams', help="number of vertical seams to be removed from the image.", default=100, const=100, nargs='?', type=int)
-parser.add_argument('--filter_type', help="type of filter to be used for generating energy map.", default="sobel", choices=set(("sobel", "laplace")), nargs='?', const="sobel", type=str)
-args = parser.parse_args()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--image_name', help="filename of the image for resizing. Image must be present in the images directory. This name will be used to generate resultant filenames.", type=str)
+    parser.add_argument('--num_seams', help="number of vertical seams to be removed from the image.", default=100, const=100, nargs='?', type=int)
+    parser.add_argument('--filter_type', help="type of filter to be used for generating energy map.", default="sobel", choices=set(("sobel", "laplace")), nargs='?', const="sobel", type=str)
+    args = parser.parse_args()
 
-results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results/") # dir to store resultant images and energy maps etc
-images_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images/") # dir to read images from
-image_list = []
+    results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results/") # dir to store resultant images and energy maps etc
+    images_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images/") # dir to read images from
+    image_list = []
 
-img = cv2.imread(images_dir+args.image_name+".jpg")
-output_img = np.copy(img)
-cv2.imwrite(results_dir+args.image_name+"_new.jpg", output_img)
-cv2.imwrite(results_dir+args.image_name+"_with_seams.jpg", img)
-print(f"Using the {args.filter_type} filter for generating the energy map")
-carve_seams(output_img)
+    img = cv2.imread(images_dir+args.image_name+".jpg")
+    cv2.imwrite(results_dir+args.image_name+"_resized_"+args.filter_type+".jpg", img)
+    cv2.imwrite(results_dir+args.image_name+"_with_seams_"+args.filter_type+".jpg", img)
+    carve_seams(img)
 
-# create gif
-run = GIFMake(image_list)
-# run.save_imgs()
-run.gif_make()
+    # create gif
+    run = GIFMake(image_list, args)
+    run.gif_make()
