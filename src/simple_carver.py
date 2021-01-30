@@ -16,7 +16,7 @@ from tqdm import trange # progress bar
 
 from giffer import GIFMake
 
-def get_energy_map(img):
+def get_energy_map(img, filter_type):
     # use the gradient magnitude function to generate the energy map
     img = img.astype(np.uint8)
 
@@ -26,14 +26,19 @@ def get_energy_map(img):
     # turn into greyscale
     grey = cv2.cvtColor(img.astype(np.uint8), cv2.COLOR_BGR2GRAY)
 
-    # use sobel filters(3*3) to get gradients
-    sobel_x = cv2.Sobel(grey, cv2.CV_64F, 1, 0, ksize=3)
-    sobel_y = cv2.Sobel(grey, cv2.CV_64F, 0, 1, ksize=3)
-    abs_sobel_x = cv2.convertScaleAbs(sobel_x)
-    abs_sobel_y = cv2.convertScaleAbs(sobel_y)
+    if(filter_type == "laplace"): # use Laplace filter
+        laplacian = cv2.Laplacian(grey, cv2.CV_64F)
+        abs_laplacian = cv2.convertScaleAbs(laplacian)
+        energy_map = abs_laplacian
 
-    # merge into energy map
-    energy_map = cv2.addWeighted(abs_sobel_x, 0.5, abs_sobel_y, 0.5, 0)
+    else: # use Sobel filter; default
+        sobel_x = cv2.Sobel(grey, cv2.CV_64F, 1, 0, ksize=3)
+        sobel_y = cv2.Sobel(grey, cv2.CV_64F, 0, 1, ksize=3)
+        abs_sobel_x = cv2.convertScaleAbs(sobel_x)
+        abs_sobel_y = cv2.convertScaleAbs(sobel_y)
+
+        # merge into energy map
+        energy_map = cv2.addWeighted(abs_sobel_x, 0.5, abs_sobel_y, 0.5, 0)
 
     # write color map(only for original image)
     color_map = cv2.applyColorMap(energy_map, cv2.COLORMAP_JET)
@@ -100,7 +105,7 @@ def get_min_seam(img, energy_map):
 
 def carve_seams(output_img):
     num_seams = args.num_seams # how many seams to remove from the image
-    energy_map = get_energy_map(output_img)
+    energy_map = get_energy_map(output_img, args.filter_type)
 
     for _ in trange(num_seams):
         seam = get_min_seam(output_img, energy_map)
@@ -117,7 +122,7 @@ def carve_seams(output_img):
         output_img = delete_seam(output_img, seam)
         image_list.append(output_img)
 
-        energy_map = get_energy_map(output_img) # get energy map of new image
+        energy_map = get_energy_map(output_img, args.filter_type) # get energy map of new image
 
     cv2.imwrite(results_dir+args.image_name+"_new.jpg", output_img)
 
