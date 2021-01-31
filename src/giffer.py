@@ -42,7 +42,7 @@ class GIFMake():
             frames.append(new_frame)
 
         # create a gif from the images stored in "frames" list
-        frames[0].save("out_"+self.args.filter_type+".gif", format='GIF', append_images=frames[1:], save_all=True, duration=40, loop=0)
+        frames[0].save("out_"+self.args.filter_type+".gif", format='GIF', append_images=frames[1:], save_all=True, duration=100, loop=0)
 
         # delete the png files used for creating the gif
         for files in os.listdir(self.results_dir):
