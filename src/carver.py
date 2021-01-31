@@ -12,6 +12,8 @@ import os
 import argparse
 import warnings
 warnings.filterwarnings("ignore")
+from pathlib import Path
+Path(os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")).mkdir(parents=True, exist_ok=True)
 
 import cv2
 import numpy as np
