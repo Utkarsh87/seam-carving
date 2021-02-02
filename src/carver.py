@@ -10,8 +10,8 @@ Make sure to keep the image to be resized in the images dir, resized images alon
 
 import os
 import argparse
-import warnings
-warnings.filterwarnings("ignore")
+# import warnings
+# warnings.filterwarnings("ignore")
 from pathlib import Path
 Path(os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")).mkdir(parents=True, exist_ok=True)
 
@@ -47,12 +47,12 @@ def get_energy_map(img, filter_type):
 
     # write color map(only for original image)
     color_map = cv2.applyColorMap(energy_map, cv2.COLORMAP_JET)
-    if not os.path.isfile(os.path.join(results_dir, "colormap_"+args.filter_type+".jpg")):
-        cv2.imwrite(results_dir+"colormap_"+args.filter_type+".jpg", color_map)
+    if not os.path.isfile(os.path.join(results_dir, f"{args.image_name}_colormap_{args.filter_type}.jpg")):
+        cv2.imwrite(results_dir+f"{args.image_name}_colormap_{args.filter_type}.jpg", color_map)
 
     # write energy map(only for original image)
-    if not os.path.isfile(os.path.join(results_dir, "energy_"+args.filter_type+".jpg")):
-        cv2.imwrite(results_dir+"energy_"+args.filter_type+".jpg", energy_map)
+    if not os.path.isfile(os.path.join(results_dir, f"{args.image_name}_energy_{args.filter_type}.jpg")):
+        cv2.imwrite(results_dir+f"{args.image_name}_energy_{args.filter_type}.jpg", energy_map)
 
     return energy_map
 
@@ -115,7 +115,7 @@ def carve_seams(output_img):
     for _ in trange(num_seams):
         seam = get_min_seam(output_img, energy_map)
 
-        overlay_seam(seam, args.image_name+"_with_seams_"+args.filter_type+".jpg") # to show all seams removed overlayed on the original image
+        overlay_seam(seam, f"{args.image_name}_with_seams_{args.filter_type}.jpg") # to show all seams removed overlayed on the original image
 
         # the image file "cur_with_next_seam.jpg" is a temp file used as a frame in creating gif of the entire seam carving process
         cv2.imwrite(results_dir+"cur_with_next_seam.jpg", output_img)
@@ -129,7 +129,7 @@ def carve_seams(output_img):
 
         energy_map = get_energy_map(output_img, args.filter_type) # get energy map of new image
 
-    cv2.imwrite(results_dir+args.image_name+"_resized_"+args.filter_type+".jpg", output_img)
+    cv2.imwrite(results_dir+f"{args.image_name}_resized_{args.filter_type}.jpg", output_img)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -140,11 +140,18 @@ if __name__ == '__main__':
 
     results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results/") # dir to store resultant images and energy maps etc
     images_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images/") # dir to read images from
+
+    # list to store the frames for creating the gif
     image_list = []
 
+    # read said image
     img = cv2.imread(images_dir+args.image_name+".jpg")
-    cv2.imwrite(results_dir+args.image_name+"_resized_"+args.filter_type+".jpg", img)
-    cv2.imwrite(results_dir+args.image_name+"_with_seams_"+args.filter_type+".jpg", img)
+
+    # create 2 output image files to be overwritten every time a new seam is computed and carved
+    cv2.imwrite(results_dir+f"{args.image_name}_resized_{args.filter_type}.jpg", img)
+    cv2.imwrite(results_dir+f"{args.image_name}_with_seams_{args.filter_type}.jpg", img)
+
+    # perform seam carving
     carve_seams(img)
 
     # create gif
