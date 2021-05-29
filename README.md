@@ -21,3 +21,5 @@ foo@bar:~/Seam-Carving$ python src/carver.py --image_name castle --num_seams 100
 TODO:
 - reduce I/O operations during seam overlaying operation, should ideally reduce compute time
 - add gif, current gif too big
+- add option to remove horizontal seams
+- instead of asking number of seams from user, ask required image dimensions and resize accordingly
