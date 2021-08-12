@@ -1,7 +1,7 @@
 """
 Content-aware image resizing(Seam Carving)
 Author: Utkarsh Kumar Singh
-Most of the code has been replicated from https://github.com/dtfiedler/seam-carving-python
+Some code borrowed from https://github.com/dtfiedler/seam-carving-python
 
 To run this script:
 python src/carver.py --image_name castle --num_seams 100 --filter_type laplace
